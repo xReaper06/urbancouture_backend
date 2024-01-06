@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "normalStart": "nodemon ./script.js",
+    "chatStart": "nodemon ./socket-server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "body-parse": "^0.1.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
