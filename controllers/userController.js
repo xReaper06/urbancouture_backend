@@ -327,11 +327,6 @@ const trackMyorder = async(req,res)=>{
         LEFT OUTER JOIN user_address AS addr ON addr.user_id = pc.user_id 
         WHERE pc.user_id = ? AND pc.status BETWEEN 1 AND 4
         `,[id]);
-        if(orderTrack.length <=0){
-            return res.status(404).json({
-                msg:'Empty Orders'
-            });
-        }
         return res.status(200).json({
             orderTrack:orderTrack
         });
