@@ -13,7 +13,38 @@ const transport = nodemailer.createTransport({
     pass: process.env.MAIL_PASS,
   },
 });
-
+const editProduct = async(req,res)=>{
+  let conn;
+  try {
+    conn = await db.getConnection();
+    const {prod_id,prod_name,prod_desc,price} = req.body;
+    const {image} = req.files;
+    let edit;
+    if(image == null){
+      edit = await conn.query('UPDATE products SET productname = ?,productdesc = ?,price = ? WHERE id = ?',[
+        prod_name,prod_desc,price,prod_id
+      ]);
+    }else{
+      edit = await conn.query('UPDATE products SET image = ?, productname = ?,productdesc = ?,price = ? WHERE id = ?',[
+        `images/${image[0].originalname}`,prod_name,prod_desc,price,prod_id
+      ]);
+    }
+    if(!edit){
+      return res.status(404).json({
+        msg:"Error Edit"
+      })
+    }
+    return res.status(201).json({
+      msg:"Edit Successfully"
+    })
+  } catch (error) {
+    console.log(error)
+  }finally{
+    if(conn){
+      conn.release()
+    }
+  }
+}
 const insertProduct = async(req,res)=>{
   let conn;
   try {
@@ -575,6 +606,28 @@ const unavailableStock = async(req,res)=>{
     }
   }
 }
+const availableStock = async(req,res)=>{
+  let conn;
+  try {
+    conn = await db.getConnection();
+    const {prod_id} = req.body;
+    const response = await conn.query('UPDATE products SET status = 0 WHERE id = ?',[prod_id]);
+    if(!response){
+      return res.status(404).json({
+        msg:'error Setting status'
+      })
+    }
+    return res.status(200).json({
+      msg:'Successfully updated'
+    })
+  } catch (error) {
+    console.log(error);
+  }finally{
+    if(conn){
+      conn.release()
+    }
+  }
+}
 const ProductSoldHistory = async(req,res)=>{
   let conn;
   try {
@@ -649,5 +702,7 @@ module.exports = {
   addNewStocks,
   allSales,
   unavailableStock,
-  getAllRiders
+  availableStock,
+  getAllRiders,
+  editProduct
 }

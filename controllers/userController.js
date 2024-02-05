@@ -4,7 +4,30 @@ const db = require("../config/dbConnection");
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-
+const featuredProducts = async(req,res)=>{
+    let conn;
+    try{
+        conn = await db.getConnection();
+        const [featuredProducts] = await conn.query(`
+        SELECT 
+        prod.id,prod.image,CAST(AVG(rate.stars)AS FLOAT) AS ratings 
+        FROM products AS prod
+        LEFT OUTER JOIN product_ratings AS rate ON prod.id = rate.product_id
+        GROUP BY prod.id,prod.image
+        ORDER BY ratings DESC
+        LIMIT 6;
+        `);
+        return res.status(200).json({
+            featuredProducts:featuredProducts
+        })
+    }catch(error){
+        console.log(error);
+    }finally{
+        if(conn){
+            conn.release()
+        }
+    }
+}
 const getUsersInfo = async(req,res)=>{
     let conn;
     try {
@@ -233,6 +256,52 @@ const editCart = async(req,res)=>{
         });
     } catch (error) {
         console.log(error);
+    }finally{
+        if(conn){
+            conn.release();
+        }
+    }
+}
+const buyNow = async(req,res)=>{
+    let conn;
+    try {
+        conn = await db.getConnection();
+        const {prod_id,selectedItems,quantity,totalPrice} = req.body;
+        const {id} = req.user
+        const query1 = 'SELECT updated_stocks,productname FROM products WHERE id = ?'
+        const query = 'SELECT quantity,price FROM product_cart WHERE product_id = ? AND user_id = ? AND status = 1'
+        let orderID = crypto.randomBytes(5).toString('hex');
+               const [checkifexistInCart] = await conn.query(query,[prod_id,id]);
+               if(checkifexistInCart.length > 0){
+                return res.status(404).json({
+                    msg:"Already Exist in Cart Goto your Cart"
+                });
+               }else{
+                const [condition] = await conn.query(query1,[prod_id]);
+                let cart_id = crypto.randomBytes(5).toString('hex');
+                if(condition[0].updated_stocks < quantity){
+                    return res.status(403).json({
+                        msg:"Item is not out of Stock At the moment"
+                    })
+                }
+                await conn.query('INSERT INTO product_cart(cart_id,user_id,product_id,quantity,price,status,created)VALUES(?,?,?,?,?,2,now())',[
+                    cart_id,id,prod_id,quantity,totalPrice
+                ]);
+                const checkoutThis = await conn.query(`INSERT INTO product_checkout(order_id,user_id,products,totalPrice,status,created)VALUES(?,?,?,?,1,now())`,[
+                    orderID,id,JSON.stringify(selectedItems),totalPrice
+                ])
+                if(!checkoutThis){
+                    return res.status.json({
+                        msg:'Error Checkout'
+                    })
+                }
+                await conn.query('INSERT INTO rooms(room_id,user_id,created)VALUES(?,?,now())',[orderID,id])
+                   return res.status(200).json({
+                       msg:`Items has been purchased Goto your the Tracking Order`
+                   });
+               }
+    } catch (error) {
+        console.log(error)
     }finally{
         if(conn){
             conn.release();
@@ -602,5 +671,7 @@ module.exports = {
     confirmDelivery,
     UpdateQuantity,
     changeInfo,
+    featuredProducts,
+    buyNow
 }
 

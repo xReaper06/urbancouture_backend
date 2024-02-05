@@ -47,6 +47,7 @@ const storage = multer.diskStorage({
   normalRouter.get('/puchaseHistory',verifyToken,userController.puchaseHistory);
   normalRouter.get('/getAllProduct',verifyToken,userController.getAllProduct);
   normalRouter.get('/trackMyorder',verifyToken,userController.trackMyorder)
+  normalRouter.get('/featuredProducts',verifyToken,userController.featuredProducts)
   normalRouter.get('/getMyProductCart',verifyToken,userController.getMyProductCart);
   normalRouter.post('/getUsersInfo',verifyToken,userController.getUsersInfo);
   normalRouter.post('/UpdateQuantity',verifyToken,userController.UpdateQuantity);
@@ -62,6 +63,8 @@ const storage = multer.diskStorage({
   normalRouter.post('/removeFromCart',verifyToken,userController.removeFromCart);
   normalRouter.post('/editCart',verifyToken,userController.editCart);
   normalRouter.post('/confirmDelivery',verifyToken,userController.confirmDelivery);
+  normalRouter.post('/buyNow',verifyToken,userController.buyNow);
+
   
 
   //Admin Routes
@@ -74,6 +77,7 @@ const storage = multer.diskStorage({
   normalRouter.get('/getAllItemsProccessed',verifyToken,adminController.getAllItemsProccessed);
   normalRouter.get('/pendingOrders',verifyToken,adminController.pendingOrders);
   normalRouter.get('/getAllProductInserted',verifyToken,adminController.getAllProductInserted);
+  normalRouter.post('/editproduct',upload.fields([{name:'image',maxCount:1}]),verifyToken,adminController.editProduct);
   normalRouter.post('/insertProduct',upload.fields([{name:'image',maxCount:1}]),verifyToken,adminController.insertProduct);
   normalRouter.post('/updateProof',verifyToken,adminController.updateProof);
   normalRouter.post('/itemProcess',verifyToken,adminController.itemProcess);
@@ -83,6 +87,7 @@ const storage = multer.diskStorage({
   normalRouter.post('/acceptRiderApplicant',verifyToken,adminController.acceptRiderApplicant);
   normalRouter.post('/denyRiderApplicant',verifyToken,adminController.denyRiderApplicant);
   normalRouter.post('/unavailableStock',verifyToken,adminController.unavailableStock);
+  normalRouter.post('/availableStock',verifyToken,adminController.availableStock);
 
 
 
