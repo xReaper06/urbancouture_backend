@@ -287,6 +287,8 @@ const buyNow = async(req,res)=>{
                 await conn.query('INSERT INTO product_cart(cart_id,user_id,product_id,quantity,price,status,created)VALUES(?,?,?,?,?,2,now())',[
                     cart_id,id,prod_id,quantity,totalPrice
                 ]);
+                let newStocks = condition[0].updated_stocks - quantity
+                await conn.query('UPDATE products SET updated_stocks = ? WHERE id = ?',[newStocks,prod_id])
                 const checkoutThis = await conn.query(`INSERT INTO product_checkout(order_id,user_id,products,totalPrice,status,created)VALUES(?,?,?,?,1,now())`,[
                     orderID,id,JSON.stringify(selectedItems),totalPrice
                 ])
