@@ -434,7 +434,7 @@ const itemShipped = async (req,res)=>{
       });
     }
     return res.status(200).json({
-      msg:'Item Has been Proccess!!'
+      msg:'Item Has been Shipped!!'
     });
   } catch (error) {
     console.log(error);
@@ -491,7 +491,7 @@ const allSales = async(req,res)=>{
   let conn;
   try {
     conn = await db.getConnection();
-    const [allsales] = await conn.query(`SELECT SUM(totalPrice) AS total FROM product_checkout WHERE status = 6`);
+    const [allsales] = await conn.query(`SELECT SUM(totalPrice) AS total FROM product_checkout WHERE status > 3`);
     const [countApplicants] = await conn.query(`SELECT COUNT(id) AS applicants FROM rider_applicant WHERE status = 1`);
     const [allProductName] = await conn.query(`SELECT id,productname FROM products`);
     const [products] = await conn.query(`SELECT c.product_id,c.quantity,c.price,c.updated,p.productname
@@ -531,16 +531,13 @@ const deliveringItem = async(req,res)=>{
   try {
     conn = await db.getConnection();
     const [response] = await conn.query(`
-    SELECT c.id, c.order_id,p.products,p.totalPrice,p.status,
-        CONCAT_WS(' ',rider.fname,rider.mname,rider.lname) AS ridername, 
-        CONCAT_WS(' ',inf.fname,inf.mname,inf.lname) AS fullname, inf.phone, 
-        CONCAT_WS(', ',addr.sitio,addr.baranggay,addr.city,addr.province, addr.zipcode) AS address
-        FROM item_deliver AS c
-        LEFT OUTER JOIN product_checkout AS p ON p.order_id = c.order_id
-        LEFT OUTER JOIN user_info AS rider ON rider.user_id = c.user_id
-        LEFT OUTER JOIN user_info AS inf ON inf.user_id = p.user_id
-        LEFT OUTER JOIN user_address as addr ON addr.user_id = inf.user_id
-        WHERE c.status = 1 AND p.status BETWEEN 4 AND 5
+    SELECT pc.*,
+       CONCAT_WS(', ', addr.sitio, addr.baranggay, addr.city, addr.province) AS address, addr.zipcode, 
+       CONCAT_WS(' ',info.fname,info.mname,info.lname) AS fullname, info.phone
+        FROM product_checkout AS pc 
+        LEFT OUTER JOIN user_address AS addr ON addr.user_id = pc.user_id 
+        LEFT OUTER JOIN user_info AS info ON info.user_id = pc.user_id
+        WHERE pc.status BETWEEN 4 AND 5
     `)
     return res.status(200).json({
       delivering:response
@@ -606,6 +603,28 @@ const unavailableStock = async(req,res)=>{
     }
   }
 }
+const deliver = async(req,res)=>{
+  let conn;
+  try {
+    conn = await db.getConnection();
+    const {order_id} = req.body;
+    const itemShipped = await conn.query(`UPDATE product_checkout SET status = 4 WHERE order_id = ?`,[order_id]);
+    if(!itemShipped){
+      return res.status(404).json({
+        msg:'Item Not Found'
+      });
+    }
+    return res.status(200).json({
+      msg:'Item Has been Delivered!!'
+    });
+  } catch (error) {
+    console.log(error)
+  }finally{
+    if(conn){
+      conn.release()
+    }
+  }
+}
 const availableStock = async(req,res)=>{
   let conn;
   try {
@@ -642,7 +661,8 @@ const ProductSoldHistory = async(req,res)=>{
         LEFT OUTER JOIN user_info AS rider ON rider.user_id = c.user_id
         LEFT OUTER JOIN user_info AS inf ON inf.user_id = p.user_id
         LEFT OUTER JOIN user_address as addr ON addr.user_id = inf.user_id
-        WHERE c.status = 2 AND p.status = 6
+        WHERE c.status = 2 AND p.status > 3
+        ORDER BY p.id DESC
     `);
     return res.status(200).json({
       products:products
@@ -704,5 +724,6 @@ module.exports = {
   unavailableStock,
   availableStock,
   getAllRiders,
-  editProduct
+  editProduct,
+  deliver
 }

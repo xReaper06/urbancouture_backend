@@ -88,6 +88,7 @@ const storage = multer.diskStorage({
   normalRouter.post('/denyRiderApplicant',verifyToken,adminController.denyRiderApplicant);
   normalRouter.post('/unavailableStock',verifyToken,adminController.unavailableStock);
   normalRouter.post('/availableStock',verifyToken,adminController.availableStock);
+  normalRouter.post('/deliver',verifyToken,adminController.deliver);
 
 
 

@@ -396,7 +396,7 @@ const trackMyorder = async(req,res)=>{
        CONCAT_WS(', ', addr.sitio, addr.baranggay, addr.city, addr.province) AS address, addr.zipcode
         FROM product_checkout AS pc 
         LEFT OUTER JOIN user_address AS addr ON addr.user_id = pc.user_id 
-        WHERE pc.user_id = ? AND pc.status BETWEEN 1 AND 4
+        WHERE pc.user_id = ? AND pc.status BETWEEN 1 AND 3
         `,[id]);
         if(orderTrack.length <=0){
             return res.status(404).json({
@@ -424,7 +424,7 @@ const puchaseHistory = async(req,res)=>{
        CONCAT_WS(', ', addr.sitio, addr.baranggay, addr.city, addr.province) AS address, addr.zipcode
         FROM product_checkout AS pc 
         LEFT OUTER JOIN user_address AS addr ON addr.user_id = pc.user_id 
-        WHERE pc.user_id = ? AND pc.status BETWEEN 5 AND 6`,[id]);
+        WHERE pc.user_id = ? AND pc.status > 3`,[id]);
         return res.status(200).json({
             orderHistory:orderHistory
         });
@@ -599,14 +599,14 @@ const confirmDelivery = async(req,res)=>{
     try {
         conn = await db.getConnection();
         const {order_id} = req.body;
-        const confirm = await conn.query(`UPDATE product_checkout SET status = 6 WHERE order_id = ?`,[order_id]);
+        const confirm = await conn.query(`UPDATE product_checkout SET status = 5 WHERE order_id = ?`,[order_id]);
         if(!confirm){
             return res.status(404).json({
                 msg:'Failed to Confirm..'
             });
         }
         return res.status(200).json({
-            msg:'successFully Confirmed'
+            msg:'successFully Rated'
         })
     } catch (error) {
         console.log(error);
