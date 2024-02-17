@@ -616,6 +616,37 @@ const confirmDelivery = async(req,res)=>{
         }
     }
 }
+const cancelOrder = async(req,res)=>{
+    let conn;
+    try {
+        conn = await db.getConnection();
+        const {orderID} = req.body;
+        const {id} = req.user
+        const [thisOrder] = await conn.query(`SELECT * FROM product_checkout WHERE order_id = ?`,[orderID]);
+        let products = JSON.parse(thisOrder[0].products)
+        products.forEach(async(data)=>{
+            let [thisProduct] = await conn.query(`SELECT * FROM products WHERE id = ?`,[data.id]);
+            let newQuant = thisProduct[0].updated_stocks + data.quantity
+            await conn.query('UPDATE products SET updated_stocks = ? WHERE id = ?',[newQuant,data.id]);
+        })
+        const orderCancelled = await conn.query(`UPDATE product_checkout SET status = 0 WHERE order_id = ? AND user_id = ?`,[orderID,id]);
+
+        if(!orderCancelled){
+            return res.status(404).json({
+                msg:"order cancellation Error"
+            })
+        }
+        return res.status(200).json({
+            msg:"Order has been Cancelled"
+        })
+    } catch (error) {
+        console.log(error)
+    }finally{
+        if(conn){
+            conn.release
+        }
+    }
+}
 const UpdateQuantity = async(req,res)=>{
     let conn;
     try {
@@ -674,6 +705,7 @@ module.exports = {
     UpdateQuantity,
     changeInfo,
     featuredProducts,
-    buyNow
+    buyNow,
+    cancelOrder
 }
 

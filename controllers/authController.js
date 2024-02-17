@@ -185,7 +185,7 @@ const logout = async (req, res) => {
       [id]
     );
     const updateLogin = await conn.query(
-      `UPDATE users SET last_loggin = now(), status = 0 WHERE id = ?`,
+      `UPDATE users SET last_loggin = now(), status = 'offline' WHERE id = ?`,
       [id]
     );
 

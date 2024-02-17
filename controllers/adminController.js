@@ -102,6 +102,7 @@ const getAllProductInserted = async(req,res)=>{
                 prod.price,
                 prod.status,
                 prod.is_deleted
+            ORDER BY prod.updated_stocks ASC
     `);
     if(insertedProd.length <= 0){
       return res.status(404).json({
@@ -492,7 +493,6 @@ const allSales = async(req,res)=>{
   try {
     conn = await db.getConnection();
     const [allsales] = await conn.query(`SELECT SUM(totalPrice) AS total FROM product_checkout WHERE status > 3`);
-    const [countApplicants] = await conn.query(`SELECT COUNT(id) AS applicants FROM rider_applicant WHERE status = 1`);
     const [allProductName] = await conn.query(`SELECT id,productname FROM products`);
     const [products] = await conn.query(`SELECT c.product_id,c.quantity,c.price,c.updated,p.productname
     FROM product_cart AS c 
@@ -514,7 +514,6 @@ const allSales = async(req,res)=>{
     })
     return res.status(200).json({
       allsales:allsales[0],
-      countApplicants:countApplicants[0],
       allProductName:allProductName,
       products:myProducts
     })
@@ -652,16 +651,13 @@ const ProductSoldHistory = async(req,res)=>{
   try {
     conn = await db.getConnection();
     const [products] = await conn.query(`
-    SELECT c.id,c.order_id,c.proof,p.products,p.totalPrice,p.status,
-        CONCAT_WS(' ',rider.fname,rider.mname,rider.lname) AS ridername,
+    SELECT p.id,p.order_id,p.products,p.totalPrice,p.status,
         CONCAT_WS(' ',inf.fname,inf.mname,inf.lname) AS fullname, inf.phone, 
         CONCAT_WS(', ',addr.sitio,addr.baranggay,addr.city,addr.province, addr.zipcode) AS address
-        FROM item_deliver AS c
-        LEFT OUTER JOIN product_checkout AS p ON p.order_id = c.order_id
-        LEFT OUTER JOIN user_info AS rider ON rider.user_id = c.user_id
+        FROM product_checkout AS p
         LEFT OUTER JOIN user_info AS inf ON inf.user_id = p.user_id
         LEFT OUTER JOIN user_address as addr ON addr.user_id = inf.user_id
-        WHERE c.status = 2 AND p.status > 3
+        WHERE p.status > 3
         ORDER BY p.id DESC
     `);
     return res.status(200).json({

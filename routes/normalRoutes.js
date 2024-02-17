@@ -64,6 +64,8 @@ const storage = multer.diskStorage({
   normalRouter.post('/editCart',verifyToken,userController.editCart);
   normalRouter.post('/confirmDelivery',verifyToken,userController.confirmDelivery);
   normalRouter.post('/buyNow',verifyToken,userController.buyNow);
+  normalRouter.post('/cancelOrder',verifyToken,userController.cancelOrder);
+
 
   
 
